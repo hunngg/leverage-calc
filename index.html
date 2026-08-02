@@ -215,7 +215,7 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .dynamic-row input.name-input {
-    width: 150px; flex-shrink: 0; height: 38px; padding: 0 12px;
+    width: 100px; flex-shrink: 0; height: 38px; padding: 0 12px;
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--surface-2); color: var(--text);
     font-size: 13px; font-family: inherit; font-weight: 500; outline: none;
@@ -448,6 +448,87 @@
   button.reset:hover { background: var(--surface-2); }
   button.reset:active { transform: scale(0.99); }
 
+  .metric-card, .ratio-card {
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+  }
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--info-accent);
+  }
+  .ratio-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--info-accent);
+  }
+  .metric-card .value {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Formula Modal Styles */
+  .formula-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; z-index: 1000;
+    transition: opacity 0.2s ease-out;
+  }
+  .formula-modal-overlay.active {
+    opacity: 1; pointer-events: auto;
+  }
+  .formula-modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    width: 90%; max-width: 440px; padding: 1.5rem;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(20px);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--text);
+  }
+  .formula-modal-overlay.active .formula-modal-card {
+    transform: translateY(0);
+  }
+  .formula-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem; border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .formula-modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .formula-modal-close {
+    background: transparent; border: none; font-size: 24px; color: var(--text-3);
+    cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .formula-modal-close:hover { color: var(--sell-accent); }
+  
+  .formula-block {
+    background: var(--surface-2); border-radius: var(--radius);
+    padding: 14px; margin-bottom: 1rem;
+    font-family: inherit; font-size: 13px; line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+  .formula-label-hint { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+  .formula-expression { font-size: 15px; font-weight: 700; color: var(--info-text-2); margin-bottom: 12px; word-break: break-all; }
+  .formula-item-detail { font-size: 12px; color: var(--text-2); display: flex; flex-direction: column; gap: 6px; }
+  .formula-item-detail div { display: flex; justify-content: space-between; }
+  .formula-item-detail span.lbl-text { color: var(--text-2); }
+  .formula-item-detail span.val-text { font-weight: 700; color: var(--text); }
+  
+  .formula-calc-result {
+    border-top: 1px dashed var(--border-strong); margin-top: 10px; padding-top: 10px;
+    font-size: 15px; font-weight: 700; display: flex; justify-content: space-between;
+    color: var(--green-text-2);
+  }
   .footer {
     margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);
     font-size: 11px; color: var(--text-3); text-align: center; line-height: 1.4;
@@ -537,20 +618,20 @@
 
     <!-- 財務指標 -->
     <div class="metric-grid">
-      <div class="metric-card highlight">
-        <p class="label">自有淨資產 (Net Worth)</p>
+      <div class="metric-card highlight" id="card-net">
+        <p class="label">自有淨資產 <span style="font-size: 10px; color: var(--text-3); font-weight: normal; margin-left: 2px;">ℹ️</span></p>
         <p class="value" id="out-net">NT$ 0</p>
       </div>
-      <div class="metric-card">
-        <p class="label">總曝險金額 (Total Exposure)</p>
+      <div class="metric-card" id="card-exposure">
+        <p class="label">總曝險金額 <span style="font-size: 10px; color: var(--text-3); font-weight: normal; margin-left: 2px;">ℹ️</span></p>
         <p class="value" id="out-exposure-amt">NT$ 0</p>
       </div>
     </div>
 
     <!-- 曝險倍率 -->
-    <div class="ratio-card">
+    <div class="ratio-card" id="card-ratio">
       <div>
-        <p class="label">總曝險倍率</p>
+        <p class="label">總曝險倍率 <span style="font-size: 10px; color: var(--info-text); opacity: 0.6; font-weight: normal; margin-left: 2px;">ℹ️</span></p>
         <p class="formula">總曝險金額 ÷ 自有淨資產</p>
       </div>
       <p class="ratio" id="out-ratio">1.00x</p>
@@ -836,6 +917,19 @@
   <p class="footer">資料儲存在此瀏覽器，清除瀏覽資料時會一併刪除。</p>
 </div>
 
+<!-- Formula Modal Overlay -->
+<div class="formula-modal-overlay" id="formula-modal">
+  <div class="formula-modal-card">
+    <div class="formula-modal-header">
+      <span class="formula-modal-title" id="modal-title">計算過程</span>
+      <button class="formula-modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div id="modal-body-content">
+      <!-- Dynamic Content -->
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
   const STORAGE_KEY = 'leverage-calc-v8-assets';
@@ -905,6 +999,15 @@
   
   const loanUseOverride = document.getElementById('loan-use-override');
   const overrideFieldsDiv = document.getElementById('override-fields');
+
+  // 計算公式 Modal DOM
+  const formulaModal = document.getElementById('formula-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalBodyContent = document.getElementById('modal-body-content');
+  const cardNet = document.getElementById('card-net');
+  const cardExposure = document.getElementById('card-exposure');
+  const cardRatio = document.getElementById('card-ratio');
 
   // ===== 頁面切換機制 =====
   document.querySelectorAll('.tab').forEach(tab => {
@@ -1712,9 +1815,116 @@
     loadAccounts(stocksContainer, STOCKS_KEY, '證券戶');
     loadAccounts(depositsContainer, DEPOSITS_KEY, '存款帳戶');
     loadLoan();
-    
     update();
   }
+
+  // ===== 計算過程彈窗 (Modal) 邏輯 =====
+  function showFormulaModal(type) {
+    const s = getState();
+    let titleText = '';
+    let bodyHtml = '';
+    
+    if (type === 'net') {
+      titleText = '自有淨資產 計算過程';
+      bodyHtml = `
+        <div class="formula-block">
+          <div class="formula-label-hint">核心公式</div>
+          <div class="formula-expression">自有淨資產 = 股市部位 + 現金部位 − 負債餘額</div>
+          <p style="margin:0; font-size:12px; color:var(--text-3);">淨資產代表您扣除所有債務後，實質擁有的個人淨財富總額。</p>
+        </div>
+        <div class="formula-block" style="margin-bottom:0;">
+          <div class="formula-label-hint">當前數據帶入</div>
+          <div class="formula-item-detail">
+            <div><span class="lbl-text">股市部位總額 (+)</span> <span class="val-text">${fmt(s.stock)}</span></div>
+            <div><span class="lbl-text">現金存款總額 (+)</span> <span class="val-text">${fmt(s.cash)}</span></div>
+            <div><span class="lbl-text">信貸本金餘額 (−)</span> <span class="val-text">${fmt(s.loanBalance)}</span></div>
+            <div class="formula-calc-result">
+              <span>計算結果 (自有淨資產)</span>
+              <span>${fmt(s.net)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (type === 'exposure') {
+      titleText = '總曝險金額 計算過程';
+      const hasLev = (s.a0050 > 0 || s.lev > 0);
+      bodyHtml = `
+        <div class="formula-block">
+          <div class="formula-label-hint">核心公式</div>
+          ${hasLev ? 
+            `<div class="formula-expression">總曝險 = 非槓桿股市部位 + (0050正二 × 2)</div>` : 
+            `<div class="formula-expression">總曝險 = 股市總值 × 1 (未填寫槓桿標的)</div>`
+          }
+          <p style="margin:0; font-size:12px; color:var(--text-3);">
+            由於 0050正二 具有 2 倍的曝險效果，系統會自動將正二部位金額乘以 2 計算，其餘股票部位以 1 倍曝險計入。
+          </p>
+        </div>
+        <div class="formula-block" style="margin-bottom:0;">
+          <div class="formula-label-hint">當前數據帶入</div>
+          <div class="formula-item-detail">
+            <div><span class="lbl-text">台股總部位</span> <span class="val-text">${fmt(s.twTotal)}</span></div>
+            <div><span class="lbl-text">其中 0050正二 (2x)</span> <span class="val-text">${fmt(s.lev)}</span></div>
+            <div><span class="lbl-text">美股部位 (1x)</span> <span class="val-text">${fmt(s.us)}</span></div>
+            ${hasLev ? 
+              `<div><span class="lbl-text">→ 非槓桿股票總和 (1x)</span> <span class="val-text">${fmt(Math.max(0, s.twTotal - s.lev) + s.us)}</span></div>
+               <div><span class="lbl-text">→ 0050正二 放大後曝險 (2x)</span> <span class="val-text">${fmt(s.lev * 2)}</span></div>` : ''
+            }
+            <div class="formula-calc-result">
+              <span>計算結果 (總曝險金額)</span>
+              <span>${fmt(s.exposure)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (type === 'ratio') {
+      titleText = '總曝險倍率 計算過程';
+      const ratioVal = s.net > 0 ? (s.exposure / s.net).toFixed(2) : '—';
+      bodyHtml = `
+        <div class="formula-block">
+          <div class="formula-label-hint">核心公式</div>
+          <div class="formula-expression">總曝險倍率 = 總曝險金額 ÷ 自有淨資產</div>
+          <p style="margin:0; font-size:12px; color:var(--text-3);">
+            反映您整體投資部位的槓桿程度。若大於 1.00x，代表您有使用信貸或正二等工具進行槓桿投資。
+          </p>
+        </div>
+        <div class="formula-block" style="margin-bottom:0;">
+          <div class="formula-label-hint">當前數據帶入</div>
+          <div class="formula-item-detail">
+            <div><span class="lbl-text">總曝險金額 (分子)</span> <span class="val-text">${fmt(s.exposure)}</span></div>
+            <div><span class="lbl-text">自有淨資產 (分母)</span> <span class="val-text">${fmt(s.net)}</span></div>
+            <div class="formula-calc-result">
+              <span>計算結果 (總曝險倍率)</span>
+              <span style="color: var(--info-text-2);">${ratioVal}x</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    modalTitle.textContent = titleText;
+    modalBodyContent.innerHTML = bodyHtml;
+    formulaModal.classList.add('active');
+  }
+
+  function closeFormulaModal() {
+    formulaModal.classList.remove('active');
+  }
+
+  // 註冊公式 Modal 點擊事件
+  cardNet.addEventListener('click', () => showFormulaModal('net'));
+  cardExposure.addEventListener('click', () => showFormulaModal('exposure'));
+  cardRatio.addEventListener('click', () => showFormulaModal('ratio'));
+  
+  modalCloseBtn.addEventListener('click', closeFormulaModal);
+  formulaModal.addEventListener('click', (e) => {
+    if (e.target === formulaModal) closeFormulaModal();
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && formulaModal.classList.contains('active')) {
+      closeFormulaModal();
+    }
+  });
 
   loadAll();
 })();
