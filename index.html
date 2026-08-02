@@ -178,11 +178,12 @@
   /* Input Rows & Forms */
   .row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .row label { font-size: 13px; color: var(--text-2); width: 150px; flex-shrink: 0; font-weight: 500; }
-  .row .currency-box {
+  .currency-box {
     display: flex; align-items: center; flex: 1; position: relative;
   }
-  .row .currency-unit {
+  .currency-unit {
     position: absolute; left: 12px; font-size: 13px; color: var(--text-3); font-weight: 500; pointer-events: none;
+    z-index: 2;
   }
   .row input {
     width: 100%; height: 38px; padding: 0 12px 0 42px;
@@ -222,7 +223,7 @@
   }
   .dynamic-row input.name-input:focus { border-color: var(--info-accent); background: var(--surface); }
   .dynamic-row input.amount-input {
-    flex: 1; height: 38px; padding: 0 12px 0 42px;
+    width: 100%; height: 38px; padding: 0 12px 0 42px;
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--surface); color: var(--text);
     font-size: 14px; font-family: inherit; font-weight: 500; outline: none;
@@ -657,8 +658,11 @@
       </div>
 
       <div class="card-section">
-        <p class="section-title">現價換算 <span style="font-size: 11px; color: var(--text-3); font-weight: normal;">(選填)</span></p>
-        <p class="section-note">填寫後會自動推算出建議買賣的「張數與零股」</p>
+        <div class="section-title">
+          <span>現價換算 <span style="font-size: 11px; color: var(--text-3); font-weight: normal;">(選填)</span></span>
+          <button class="add-btn" id="fetch-prices-btn" type="button" style="margin: 0; padding: 4px 10px; font-size: 11px; border-style: solid;">⚡ 一鍵獲取最新股價</button>
+        </div>
+        <p class="section-note" id="price-fetch-status">填寫或獲取股價後會自動推算出建議買賣的「張數與零股」</p>
         <div class="row">
           <label>0050 現價</label>
           <div class="standard-box">
@@ -887,6 +891,8 @@
 
   const price0050Input = document.getElementById('price-0050');
   const priceLevInput = document.getElementById('price-lev');
+  const fetchPricesBtn = document.getElementById('fetch-prices-btn');
+  const priceFetchStatus = document.getElementById('price-fetch-status');
 
   const modeAResult = document.getElementById('mode-a-result');
   const modeBResult = document.getElementById('mode-b-result');
@@ -920,6 +926,25 @@
       update();
     });
   });
+
+  // ===== 一鍵抓取最新股價 =====
+  async function fetchYahooPrice(symbol) {
+    const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`;
+    
+    try {
+      const res = await fetch(directUrl);
+      if (!res.ok) throw new Error('Direct fetch failed');
+      const data = await res.json();
+      return data.chart.result[0].meta.regularMarketPrice;
+    } catch (e) {
+      console.warn(`Direct fetch for ${symbol} failed, trying CORS proxy...`, e);
+      const res = await fetch(proxyUrl);
+      const data = await res.json();
+      const parsed = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+      return parsed.chart.result[0].meta.regularMarketPrice;
+    }
+  }
 
   // ===== 數值千分位處理機制 =====
   const fmt = n => 'NT$ ' + Math.round(n).toLocaleString('en-US');
@@ -1508,6 +1533,46 @@
   priceLevInput.addEventListener('input', () => {
     renderTradeSimulation();
     try { localStorage.setItem(PRICE_LEV_KEY, priceLevInput.value); } catch (e) {}
+  });
+
+  // 一鍵獲取最新股價事件
+  fetchPricesBtn.addEventListener('click', async () => {
+    fetchPricesBtn.disabled = true;
+    const origText = fetchPricesBtn.textContent;
+    fetchPricesBtn.textContent = '⏳ 獲取中...';
+    priceFetchStatus.textContent = '正在連線 Yahoo Finance 獲取最新市價...';
+    priceFetchStatus.style.color = 'var(--info-accent)';
+
+    try {
+      const [p0050, pLev] = await Promise.all([
+        fetchYahooPrice('0050.TW'),
+        fetchYahooPrice('00631L.TW')
+      ]);
+
+      if (p0050 && pLev) {
+        price0050Input.value = p0050.toFixed(2);
+        priceLevInput.value = pLev.toFixed(2);
+        
+        // 儲存至 localStorage
+        try {
+          localStorage.setItem(PRICE_0050_KEY, p0050.toFixed(2));
+          localStorage.setItem(PRICE_LEV_KEY, pLev.toFixed(2));
+        } catch(e) {}
+
+        priceFetchStatus.textContent = `成功獲取股價！更新時間：${new Date().toLocaleTimeString()} (0050: $${p0050.toFixed(2)}, 正二: $${pLev.toFixed(2)})`;
+        priceFetchStatus.style.color = 'var(--green-text-2)';
+        renderTradeSimulation();
+      } else {
+        throw new Error('Invalid price data received');
+      }
+    } catch (e) {
+      console.error(e);
+      priceFetchStatus.textContent = '❌ 獲取失敗，可能因為網路問題或 API 限制，請手動輸入股價。';
+      priceFetchStatus.style.color = 'var(--sell-accent)';
+    } finally {
+      fetchPricesBtn.disabled = false;
+      fetchPricesBtn.textContent = origText;
+    }
   });
 
   // 帳戶新增按鈕
