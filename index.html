@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資產槓桿計算機</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C447C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="槓桿計算機">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiMwQzQ0N0MiLz4KICA8cG9seWxpbmUKICAgIHBvaW50cz0iODAsMzYwIDE4MCwyNjAgMjYwLDMwMCAzNDAsMTYwIDQzMiwxNDAiCiAgICBmaWxsPSJub25lIgogICAgc3Ryb2tlPSJ3aGl0ZSIKICAgIHN0cm9rZS13aWR0aD0iMzIiCiAgICBzdHJva2UtbGluZWNhcD0icm91bmQiCiAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgb3BhY2l0eT0iMC4zIgogIC8+CiAgPHBvbHlsaW5lCiAgICBwb2ludHM9IjgwLDM2MCAxODAsMjYwIDI2MCwzMDAgMzQwLDE2MCA0MzIsMTQwIgogICAgZmlsbD0ibm9uZSIKICAgIHN0cm9rZT0id2hpdGUiCiAgICBzdHJva2Utd2lkdGg9IjIyIgogICAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogICAgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIKICAvPgogIDxjaXJjbGUgY3g9IjQzMiIgY3k9IjE0MCIgcj0iMjIiIGZpbGw9IndoaXRlIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iMzkwIiB4Mj0iNDQwIiB5Mj0iMzkwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNCIvPgo8L3N2Zz4=">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface-2: #f1efe8;
+    --border: rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.22);
+    --text: #1a1a1a;
+    --text-2: #5f5e5a;
+    --text-3: #888780;
+    --info-bg: #E6F1FB;
+    --info-text: #0C447C;
+    --info-text-2: #185FA5;
+    --info-accent: #378ADD;
+    --green-bg: #E1F5EE;
+    --green-text: #085041;
+    --green-text-2: #0F6E56;
+    --green-accent: #1D9E75;
+    --warn-bg: #FAEEDA;
+    --warn-text: #854F0B;
+    --buy-bg: #E1F5EE;
+    --buy-text: #085041;
+    --sell-bg: #FCEBEB;
+    --sell-text: #791F1F;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #262624;
+      --surface-2: #2c2c2a;
+      --border: rgba(255,255,255,0.12);
+      --border-strong: rgba(255,255,255,0.22);
+      --text: #f1efe8;
+      --text-2: #b4b2a9;
+      --text-3: #888780;
+      --info-bg: #0C447C40;
+      --info-text: #B5D4F4;
+      --info-text-2: #85B7EB;
+      --green-bg: #08504140;
+      --green-text: #9FE1CB;
+      --green-text-2: #5DCAA5;
+      --warn-bg: #633806;
+      --warn-text: #FAC775;
+      --buy-bg: #08504140;
+      --buy-text: #9FE1CB;
+      --sell-bg: #50131340;
+      --sell-text: #F7C1C1;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 680px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 0.25rem; }
+  .subtitle { font-size: 13px; color: var(--text-2); margin: 0 0 1.25rem; }
+  .tabs {
+    display: flex; gap: 6px; margin-bottom: 1.5rem; padding: 4px;
+    background: var(--surface-2); border-radius: var(--radius);
+  }
+  .tab {
+    flex: 1; padding: 8px 12px; background: transparent; border: none;
+    border-radius: 7px; color: var(--text-2); font-size: 14px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--surface); color: var(--text); font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .subtabs {
+    display: flex; gap: 4px; margin-bottom: 1.25rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .subtab {
+    padding: 8px 14px; background: transparent; border: none;
+    border-bottom: 2px solid transparent; color: var(--text-2);
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    transition: all 0.15s; margin-bottom: -0.5px;
+  }
+  .subtab:hover { color: var(--text); }
+  .subtab.active {
+    color: var(--info-text-2); border-bottom-color: var(--info-accent); font-weight: 500;
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+  .subpage { display: none; }
+  .subpage.active { display: block; }
+  .section { margin-bottom: 1.25rem; }
+  .section-title { font-size: 14px; font-weight: 500; margin: 0 0 4px; color: var(--text); }
+  .section-note { font-size: 12px; color: var(--text-3); margin: 0 0 10px; line-height: 1.5; }
+  .row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .row label { font-size: 13px; color: var(--text-2); min-width: 130px; }
+  .row .nt { font-size: 13px; color: var(--text-3); }
+  .row input {
+    flex: 1; height: 36px; padding: 0 10px;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+  }
+  .row input::-webkit-outer-spin-button,
+  .row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .row input:hover { border-color: var(--border-strong); }
+  .row input:focus {
+    border-color: var(--info-accent);
+    box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
+  }
+  /* 動態存款列:可編輯名稱 + 金額 + 刪除按鈕 */
+  .deposit-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .deposit-row input.name {
+    width: 130px; flex-shrink: 0; height: 36px; padding: 0 10px;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text-2);
+    font-size: 13px; font-family: inherit; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .deposit-row input.name:hover { border-color: var(--border-strong); }
+  .deposit-row input.name:focus {
+    border-color: var(--info-accent); color: var(--text);
+    box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
+  }
+  .deposit-row .nt { font-size: 13px; color: var(--text-3); }
+  .deposit-row input.amount {
+    flex: 1; height: 36px; padding: 0 10px;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+  }
+  .deposit-row input.amount::-webkit-outer-spin-button,
+  .deposit-row input.amount::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .deposit-row input.amount:hover { border-color: var(--border-strong); }
+  .deposit-row input.amount:focus {
+    border-color: var(--info-accent);
+    box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
+  }
+  .deposit-row button.remove {
+    width: 28px; height: 28px; padding: 0; flex-shrink: 0;
+    background: transparent; border: none; border-radius: 50%;
+    color: var(--text-3); font-size: 16px; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .deposit-row button.remove:hover {
+    background: var(--sell-bg); color: var(--sell-text);
+  }
+  button.add-deposit {
+    margin-top: 4px; padding: 6px 12px; background: transparent;
+    border: 0.5px dashed var(--border-strong); border-radius: var(--radius);
+    color: var(--text-2); font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+  }
+  button.add-deposit:hover {
+    background: var(--surface-2); color: var(--text);
+    border-style: solid;
+  }
+  .derived { display: flex; align-items: center; gap: 10px; padding: 6px 0 2px; }
+  .derived .lbl { font-size: 12px; color: var(--text-3); min-width: 130px; }
+  .derived .val { font-size: 13px; color: var(--text-2); font-weight: 500; }
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px; margin-bottom: 1rem;
+  }
+  .metric { background: var(--surface-2); border-radius: var(--radius); padding: 1rem; }
+  .metric .label { font-size: 13px; color: var(--text-2); margin: 0 0 4px; }
+  .metric .value { font-size: 22px; font-weight: 500; margin: 0; }
+  .ratio-card {
+    background: var(--info-bg); border-radius: var(--radius-lg);
+    padding: 1.25rem; display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 1rem;
+  }
+  .ratio-card .label { font-size: 13px; color: var(--info-text); margin: 0 0 4px; }
+  .ratio-card .formula { font-size: 12px; color: var(--info-text); margin: 0; opacity: 0.75; }
+  .ratio-card .ratio { font-size: 32px; font-weight: 500; margin: 0; color: var(--info-text); }
+  .effective-card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem;
+  }
+  .effective-card .head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
+  .effective-card .label { font-size: 13px; color: var(--text-2); margin: 0; }
+  .effective-card .value { font-size: 18px; font-weight: 500; margin: 0; }
+  .effective-card .note { font-size: 12px; color: var(--text-3); margin: 0; line-height: 1.5; }
+  .overview { margin-top: 0.5rem; }
+  .bar {
+    display: flex; height: 8px; border-radius: var(--radius);
+    overflow: hidden; background: var(--surface-2); margin-bottom: 12px;
+  }
+  .bar > div { height: 100%; transition: width 0.2s; }
+  .breakdown { display: flex; flex-direction: column; gap: 8px; }
+  .breakdown-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-radius: var(--radius);
+  }
+  .breakdown-row.stock { background: var(--info-bg); }
+  .breakdown-row.stock .name, .breakdown-row.stock .amt { color: var(--info-text); }
+  .breakdown-row.stock .pct { color: var(--info-text-2); }
+  .breakdown-row.cash { background: var(--green-bg); }
+  .breakdown-row.cash .name, .breakdown-row.cash .amt { color: var(--green-text); }
+  .breakdown-row.cash .pct { color: var(--green-text-2); }
+  .breakdown-row.net { background: var(--surface); border: 0.5px solid var(--border-strong); }
+  .breakdown-row.net .name, .breakdown-row.net .amt { color: var(--text); }
+  .breakdown-row.loan { background: var(--sell-bg); }
+  .breakdown-row.loan .name, .breakdown-row.loan .amt { color: var(--sell-text); }
+  .breakdown-row .left { display: flex; align-items: center; gap: 10px; }
+  .breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .breakdown-row .name { font-size: 14px; font-weight: 500; }
+  .breakdown-row .pct { font-size: 12px; }
+  .breakdown-row .amt { font-size: 15px; font-weight: 500; }
+  button.reset {
+    margin-top: 1.25rem; padding: 8px 14px; background: transparent;
+    border: 0.5px solid var(--border-strong); border-radius: var(--radius);
+    color: var(--text); font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: background 0.15s, transform 0.05s;
+  }
+  button.reset:hover { background: var(--surface-2); }
+  button.reset:active { transform: scale(0.98); }
+  .footer {
+    margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid var(--border);
+    font-size: 12px; color: var(--text-3); text-align: center;
+  }
+  .current-snapshot {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+  }
+  .snapshot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .snapshot-item .label { font-size: 12px; color: var(--text-3); margin: 0 0 2px; }
+  .snapshot-item .value { font-size: 15px; font-weight: 500; margin: 0; }
+  .snapshot-item .value.ratio { color: var(--info-text-2); }
+  .target-row {
+    background: var(--info-bg); border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .target-row label { font-size: 14px; font-weight: 500; color: var(--info-text); flex-shrink: 0; }
+  .target-row input {
+    flex: 1; height: 36px; padding: 0 10px;
+    border: 0.5px solid rgba(0,0,0,0.15); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none;
+    -moz-appearance: textfield;
+  }
+  .target-row input::-webkit-outer-spin-button,
+  .target-row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .target-row .unit { font-size: 14px; color: var(--info-text); }
+  .mode-card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem;
+  }
+  .mode-desc { font-size: 12px; color: var(--text-3); margin: 0 0 14px; line-height: 1.5; }
+  .trade-action {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 12px 0; border-top: 0.5px solid var(--border);
+  }
+  .trade-action:first-of-type { border-top: none; padding-top: 0; }
+  .trade-action .action-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .trade-action .tag { font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
+  .trade-action .tag.buy { background: var(--buy-bg); color: var(--buy-text); }
+  .trade-action .tag.sell { background: var(--sell-bg); color: var(--sell-text); }
+  .trade-action .tag.hold { background: var(--surface-2); color: var(--text-2); }
+  .trade-action .item-name { font-size: 14px; color: var(--text); flex: 1; }
+  .trade-action .item-amt { font-size: 15px; font-weight: 500; color: var(--text); }
+  .mode-impossible {
+    padding: 12px; background: var(--warn-bg); border-radius: var(--radius);
+    font-size: 13px; color: var(--warn-text); line-height: 1.5;
+  }
+  .after-snapshot { margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--border); }
+  .after-snapshot .after-title { font-size: 12px; color: var(--text-3); margin: 0 0 8px; }
+  .after-snapshot .after-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .after-item .lbl { font-size: 11px; color: var(--text-3); margin: 0; }
+  .after-item .v { font-size: 13px; font-weight: 500; margin: 0; }
+  .after-item .v.highlight { color: var(--info-text-2); }
+  .after-item .pct { font-size: 11px; color: var(--text-3); }
+  .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-3); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>資產槓桿計算機</h1>
+  <p class="subtitle">輸入各項資產後即時計算槓桿倍率與配置比例</p>
+
+  <div class="tabs">
+    <button class="tab active" data-page="overview-page">資產總覽</button>
+    <button class="tab" data-page="trade-page">買賣試算</button>
+    <button class="tab" data-page="loan-page">信貸管理</button>
+  </div>
+
+  <div class="page active" id="overview-page">
+    <div class="section">
+      <p class="section-title">台股部位</p>
+      <p class="section-note">若無 0050 與正二部位，可單獨填寫總部位數值計算</p>
+      <div class="row">
+        <label>0050 (元大台灣50)</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="tw-0050" placeholder="0" min="0" step="1000">
+      </div>
+      <div class="row">
+        <label>0050正二 (00631L)</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="lev-twstock" placeholder="0" min="0" step="1000">
+      </div>
+      <div class="row">
+        <label>台股總部位</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="tw-total" placeholder="0" min="0" step="1000">
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="section-title">美股部位</p>
+      <p class="section-note">無美股部位可略過不填</p>
+      <div class="row">
+        <label>美股</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="us-stock" placeholder="0" min="0" step="1000">
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="section-title">現金存款</p>
+      <p class="section-note">可新增多個來源，名稱可自行命名</p>
+      <div id="deposits-container"></div>
+      <button class="add-deposit" id="add-deposit-btn">＋ 新增存款欄位</button>
+      <div class="derived">
+        <span class="lbl">→ 現金合計</span>
+        <span></span>
+        <span class="val" id="out-cashtotal">NT$ 0</span>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric">
+        <p class="label">自有淨資產</p>
+        <p class="value" id="out-net">NT$ 0</p>
+      </div>
+      <div class="metric">
+        <p class="label">總曝險金額</p>
+        <p class="value" id="out-exposure-amt">NT$ 0</p>
+      </div>
+    </div>
+
+    <div class="ratio-card">
+      <div>
+        <p class="label">曝險倍率</p>
+        <p class="formula">總曝險金額 ÷ 自有淨資產</p>
+      </div>
+      <p class="ratio" id="out-ratio">0.00x</p>
+    </div>
+
+    <div class="overview">
+      <p class="section-title" style="margin-bottom: 8px;">資產配置總覽</p>
+      <div class="bar">
+        <div id="bar-stock" style="background: var(--info-accent); width: 0%;"></div>
+        <div id="bar-cash" style="background: var(--green-accent); width: 0%;"></div>
+      </div>
+      <div class="breakdown">
+        <div class="breakdown-row stock">
+          <div class="left">
+            <span class="dot" style="background: var(--info-accent);"></span>
+            <span class="name">股市部位</span>
+            <span class="pct" id="out-stock-pct">0%</span>
+          </div>
+          <span class="amt" id="out-stock-amt">NT$ 0</span>
+        </div>
+        <div class="breakdown-row cash">
+          <div class="left">
+            <span class="dot" style="background: var(--green-accent);"></span>
+            <span class="name">現金部位</span>
+            <span class="pct" id="out-cash-pct">0%</span>
+          </div>
+          <span class="amt" id="out-cash-amt">NT$ 0</span>
+        </div>
+        <div class="breakdown-row loan" id="loan-breakdown-row" style="display: none;">
+          <div class="left">
+            <span class="dot" style="background: #C33;"></span>
+            <span class="name">貸款餘額</span>
+          </div>
+          <span class="amt" id="out-loan-amt">− NT$ 0</span>
+        </div>
+        <div class="breakdown-row net">
+          <div class="left">
+            <span class="name">自有淨資產</span>
+          </div>
+          <span class="amt" id="out-net2">NT$ 0</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="reset" id="reset-btn">↻ 清除數值</button>
+  </div>
+
+  <div class="page" id="trade-page">
+    <div class="current-snapshot">
+      <p class="section-title" style="margin-bottom: 12px;">目前狀態</p>
+      <div class="snapshot-grid">
+        <div class="snapshot-item">
+          <p class="label">現有 0050</p>
+          <p class="value" id="cur-0050">NT$ 0</p>
+        </div>
+        <div class="snapshot-item">
+          <p class="label">現有 0050正二</p>
+          <p class="value" id="cur-lev">NT$ 0</p>
+        </div>
+        <div class="snapshot-item">
+          <p class="label">現有現金</p>
+          <p class="value" id="cur-cash">NT$ 0</p>
+        </div>
+        <div class="snapshot-item">
+          <p class="label">目前曝險倍率</p>
+          <p class="value ratio" id="cur-ratio">0.00x</p>
+        </div>
+        <div class="snapshot-item">
+          <p class="label">目前現金佔比</p>
+          <p class="value" id="cur-cash-pct">0%</p>
+        </div>
+        <div class="snapshot-item">
+          <p class="label">自有淨資產</p>
+          <p class="value" id="cur-net">NT$ 0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subtabs">
+      <button class="subtab active" data-sub="mode-a">模式 A · 調整曝險</button>
+      <button class="subtab" data-sub="mode-b">模式 B · 調整現金</button>
+    </div>
+
+    <div class="subpage active" id="mode-a">
+      <div class="target-row">
+        <label>目標曝險倍率</label>
+        <input type="number" id="target-ratio" placeholder="例: 0.60" min="0" max="3" step="0.01">
+        <span class="unit">x</span>
+      </div>
+      <div class="section" style="background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.25rem;">
+        <p class="section-title" style="margin-bottom: 4px;">現價</p>
+        <p class="section-note" style="margin-bottom: 10px;">可選，填了會顯示建議買賣股數</p>
+        <div class="row">
+          <label>0050 現價</label>
+          <span class="nt">NT$</span>
+          <input type="number" id="price-0050" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="row" style="margin-bottom: 0;">
+          <label>0050正二 現價</label>
+          <span class="nt">NT$</span>
+          <input type="number" id="price-lev" placeholder="0" min="0" step="0.01">
+        </div>
+      </div>
+      <div id="mode-a-result">
+        <div class="empty-state">輸入目標曝險倍率以查看試算結果</div>
+      </div>
+    </div>
+
+    <div class="subpage" id="mode-b">
+      <div class="target-row">
+        <label>目標現金佔比</label>
+        <input type="number" id="target-cash-pct" placeholder="例: 25" min="0" max="100" step="0.5">
+        <span class="unit">%</span>
+      </div>
+      <div id="mode-b-result">
+        <div class="empty-state">輸入目標現金佔比以查看試算結果</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="loan-page">
+    <div class="section">
+      <p class="section-title">貸款基本資料</p>
+      <p class="section-note">扣款日到期時會自動更新已還期數與貸款餘額，所有欄位皆可手動修改</p>
+      <div class="row">
+        <label>貸款總金額</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="loan-total" placeholder="0" min="0" step="10000">
+      </div>
+      <div class="row">
+        <label>年利率</label>
+        <span class="nt">%</span>
+        <input type="number" id="loan-rate" placeholder="例: 2.5" min="0" max="20" step="0.01">
+      </div>
+      <div class="row">
+        <label>總期數</label>
+        <span class="nt">期</span>
+        <input type="number" id="loan-periods" placeholder="例: 84" min="1" step="1">
+      </div>
+      <div class="row">
+        <label>已還期數</label>
+        <span class="nt">期</span>
+        <input type="number" id="loan-paid" placeholder="0" min="0" step="1">
+      </div>
+      <div class="row">
+        <label>每期還款金額</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="loan-payment" placeholder="0" min="0" step="100">
+      </div>
+      <div class="row">
+        <label>每月扣款日</label>
+        <span class="nt">日</span>
+        <input type="number" id="loan-payday" placeholder="例: 15" min="1" max="28" step="1">
+      </div>
+      <div class="row">
+        <label>貸款餘額</label>
+        <span class="nt">NT$</span>
+        <input type="number" id="loan-balance" placeholder="0" min="0" step="1000">
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric">
+        <p class="label">貸款餘額</p>
+        <p class="value" id="loan-out-balance">NT$ 0</p>
+      </div>
+      <div class="metric">
+        <p class="label">剩餘期數</p>
+        <p class="value" id="loan-out-remaining">0 期</p>
+      </div>
+    </div>
+
+    <div class="effective-card">
+      <div class="head">
+        <p class="label">還款進度</p>
+        <p class="value" id="loan-out-progress">0%</p>
+      </div>
+      <div class="bar" style="margin-bottom: 8px;">
+        <div id="loan-bar" style="background: var(--info-accent); width: 0%;"></div>
+      </div>
+      <p class="note" id="loan-note">貸款餘額會從資產總覽的淨資產中扣除</p>
+    </div>
+  </div>
+
+  <p class="footer">資料儲存在此瀏覽器，清除瀏覽資料時會一併刪除</p>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'leverage-calc-v7';
+  const DEPOSITS_KEY = 'leverage-calc-v7-deposits';
+  const LOAN_KEY = 'leverage-calc-loan';
+  const fixedIds = ['tw-0050', 'lev-twstock', 'tw-total', 'us-stock'];
+  const loanIds = ['loan-total', 'loan-rate', 'loan-periods', 'loan-paid', 'loan-payment', 'loan-payday', 'loan-balance'];
+  const TARGET_RATIO_KEY = 'leverage-target-ratio';
+  const TARGET_CASH_KEY = 'leverage-target-cash-pct';
+  const PRICE_0050_KEY = 'price-0050';
+  const PRICE_LEV_KEY = 'price-lev';
+  const inputs = {};
+  fixedIds.forEach(id => { inputs[id] = document.getElementById(id); });
+  const loanInputs = {};
+  loanIds.forEach(id => { loanInputs[id] = document.getElementById(id); });
+  const targetRatioInput = document.getElementById('target-ratio');
+  const targetCashInput = document.getElementById('target-cash-pct');
+  const price0050Input = document.getElementById('price-0050');
+  const priceLevInput = document.getElementById('price-lev');
+  const depositsContainer = document.getElementById('deposits-container');
+  const addDepositBtn = document.getElementById('add-deposit-btn');
+
+  const outNet = document.getElementById('out-net');
+  const outNet2 = document.getElementById('out-net2');
+  const outExposureAmt = document.getElementById('out-exposure-amt');
+  const outRatio = document.getElementById('out-ratio');
+  const outCashTotal = document.getElementById('out-cashtotal');
+  const outLoanAmt = document.getElementById('out-loan-amt');
+  const loanBreakdownRow = document.getElementById('loan-breakdown-row');
+  const loanOutBalance = document.getElementById('loan-out-balance');
+  const loanOutRemaining = document.getElementById('loan-out-remaining');
+  const loanOutProgress = document.getElementById('loan-out-progress');
+  const loanBar = document.getElementById('loan-bar');
+  const outStockAmt = document.getElementById('out-stock-amt');
+  const outStockPct = document.getElementById('out-stock-pct');
+  const outCashAmt = document.getElementById('out-cash-amt');
+  const outCashPct = document.getElementById('out-cash-pct');
+  const barStock = document.getElementById('bar-stock');
+  const barCash = document.getElementById('bar-cash');
+  const resetBtn = document.getElementById('reset-btn');
+
+  const cur0050 = document.getElementById('cur-0050');
+  const curLev = document.getElementById('cur-lev');
+  const curCash = document.getElementById('cur-cash');
+  const curRatio = document.getElementById('cur-ratio');
+  const curCashPct = document.getElementById('cur-cash-pct');
+  const curNet = document.getElementById('cur-net');
+  const modeAResult = document.getElementById('mode-a-result');
+  const modeBResult = document.getElementById('mode-b-result');
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.page).classList.add('active');
+    });
+  });
+  document.querySelectorAll('.subtab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.subpage').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.sub).classList.add('active');
+    });
+  });
+
+  const fmt = n => 'NT$ ' + Math.round(n).toLocaleString('en-US');
+  const val = id => {
+    const v = parseFloat(inputs[id].value);
+    return isFinite(v) && v > 0 ? v : 0;
+  };
+
+  // ===== 動態存款列管理 =====
+  function createDepositRow(name, amount) {
+    const row = document.createElement('div');
+    row.className = 'deposit-row';
+    row.innerHTML =
+      '<input type="text" class="name" placeholder="名稱" value="' + (name || '') + '">' +
+      '<span class="nt">NT$</span>' +
+      '<input type="number" class="amount" placeholder="0" min="0" step="1000" value="' + (amount || '') + '">' +
+      '<button class="remove" title="刪除此列" type="button">×</button>';
+    row.querySelector('input.name').addEventListener('input', () => { update(); saveDeposits(); });
+    row.querySelector('input.amount').addEventListener('input', () => { update(); saveDeposits(); });
+    row.querySelector('button.remove').addEventListener('click', () => {
+      row.remove();
+      // 至少保留一列
+      if (depositsContainer.children.length === 0) {
+        createDepositRow('活期存款', '');
+      }
+      update();
+      saveDeposits();
+    });
+    depositsContainer.appendChild(row);
+  }
+
+  function getDeposits() {
+    const list = [];
+    depositsContainer.querySelectorAll('.deposit-row').forEach(row => {
+      const name = row.querySelector('input.name').value;
+      const amount = row.querySelector('input.amount').value;
+      list.push({ name, amount });
+    });
+    return list;
+  }
+
+  function getCashTotal() {
+    let total = 0;
+    depositsContainer.querySelectorAll('.deposit-row input.amount').forEach(inp => {
+      const v = parseFloat(inp.value);
+      if (isFinite(v) && v > 0) total += v;
+    });
+    return total;
+  }
+
+  function saveDeposits() {
+    try {
+      localStorage.setItem(DEPOSITS_KEY, JSON.stringify(getDeposits()));
+    } catch (e) {}
+  }
+
+  function loadDeposits() {
+    try {
+      const raw = localStorage.getItem(DEPOSITS_KEY);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list) && list.length > 0) {
+          list.forEach(d => createDepositRow(d.name, d.amount));
+          return;
+        }
+      }
+    } catch (e) {}
+    // 預設兩列空白活期存款
+    createDepositRow('活期存款', '');
+    createDepositRow('活期存款', '');
+  }
+
+  addDepositBtn.addEventListener('click', () => {
+    createDepositRow('活期存款', '');
+    saveDeposits();
+  });
+
+  // ===== 貸款管理 =====
+  function loanVal(id) {
+    const v = parseFloat(loanInputs[id].value);
+    return isFinite(v) && v > 0 ? v : 0;
+  }
+
+  function saveLoan() {
+    try {
+      const data = { lastCheck: new Date().toISOString().slice(0, 10) };
+      loanIds.forEach(id => { data[id] = loanInputs[id].value; });
+      localStorage.setItem(LOAN_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  // 計算兩個日期之間經過了幾次扣款日
+  function countPaydays(fromDateStr, toDate, payday) {
+    if (!payday || payday < 1 || payday > 28) return 0;
+    const from = new Date(fromDateStr + 'T00:00:00');
+    let count = 0;
+    let y = from.getFullYear();
+    let m = from.getMonth();
+    for (let i = 0; i < 600; i++) {
+      const pd = new Date(y, m, payday);
+      if (pd > from && pd <= toDate) count++;
+      if (pd > toDate) break;
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+    return count;
+  }
+
+  function loadLoan() {
+    let data = null;
+    try {
+      const raw = localStorage.getItem(LOAN_KEY);
+      if (raw) data = JSON.parse(raw);
+    } catch (e) {}
+    if (!data) return;
+
+    loanIds.forEach(id => { if (data[id] != null) loanInputs[id].value = data[id]; });
+
+    const lastCheck = data.lastCheck;
+    if (!lastCheck) { saveLoan(); return; }
+
+    const payday = loanVal('loan-payday');
+    const payment = loanVal('loan-payment');
+    const totalPeriods = loanVal('loan-periods');
+    let paid = loanVal('loan-paid');
+    let balance = loanVal('loan-balance');
+
+    if (payday && payment && balance > 0 && paid < totalPeriods) {
+      const passed = countPaydays(lastCheck, new Date(), payday);
+      if (passed > 0) {
+        const applicable = Math.min(passed, totalPeriods - paid);
+        paid += applicable;
+        balance = Math.max(0, balance - payment * applicable);
+        loanInputs['loan-paid'].value = paid;
+        loanInputs['loan-balance'].value = Math.round(balance);
+      }
+    }
+    saveLoan();
+  }
+
+  function renderLoan() {
+    const balance = loanVal('loan-balance');
+    const totalPeriods = loanVal('loan-periods');
+    const paid = loanVal('loan-paid');
+    const remaining = Math.max(0, totalPeriods - paid);
+
+    loanOutBalance.textContent = fmt(balance);
+    loanOutRemaining.textContent = remaining + ' 期';
+
+    if (totalPeriods > 0) {
+      const progress = Math.min(100, (paid / totalPeriods) * 100);
+      loanOutProgress.textContent = progress.toFixed(1) + '%';
+      loanBar.style.width = progress + '%';
+    } else {
+      loanOutProgress.textContent = '0%';
+      loanBar.style.width = '0%';
+    }
+  }
+
+  // ===== 載入與儲存 =====
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        fixedIds.forEach(id => { if (data[id] != null) inputs[id].value = data[id]; });
+      }
+      const tr = localStorage.getItem(TARGET_RATIO_KEY);
+      if (tr != null) targetRatioInput.value = tr;
+      const tc = localStorage.getItem(TARGET_CASH_KEY);
+      if (tc != null) targetCashInput.value = tc;
+      const p1 = localStorage.getItem(PRICE_0050_KEY);
+      if (p1 != null) price0050Input.value = p1;
+      const p2 = localStorage.getItem(PRICE_LEV_KEY);
+      if (p2 != null) priceLevInput.value = p2;
+    } catch (e) {}
+    loadDeposits();
+    loadLoan();
+    update();
+  }
+
+  function save() {
+    try {
+      const data = {};
+      fixedIds.forEach(id => { data[id] = inputs[id].value; });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function getState() {
+    const a0050 = val('tw-0050');
+    const lev = val('lev-twstock');
+    const twTotal = val('tw-total');
+    const us = val('us-stock');
+    const cash = getCashTotal();
+    const loanBalance = loanVal('loan-balance');
+    const stock = twTotal + us;
+    // 自有淨資產 = 股票 + 現金 - 貸款餘額
+    const net = stock + cash - loanBalance;
+    // 曝險 = 非槓桿股票×1 + 0050正二×2 (信貸投入的錢已含在部位中)
+    const nonLevStock = Math.max(0, twTotal - lev) + us;
+    const exposure = nonLevStock + lev * 2;
+    return { a0050, lev, twTotal, us, cash, stock, net, exposure, nonLevStock, loanBalance };
+  }
+
+  function renderOverview() {
+    const s = getState();
+    outCashTotal.textContent = fmt(s.cash);
+    outNet.textContent = fmt(s.net);
+    outNet2.textContent = fmt(s.net);
+    outStockAmt.textContent = fmt(s.stock);
+    outCashAmt.textContent = fmt(s.cash);
+
+    // 貸款列:有貸款餘額才顯示
+    if (s.loanBalance > 0) {
+      loanBreakdownRow.style.display = 'flex';
+      outLoanAmt.textContent = '− ' + fmt(s.loanBalance);
+    } else {
+      loanBreakdownRow.style.display = 'none';
+    }
+
+    const gross = s.stock + s.cash;  // 帳面資產(不扣貸款),用於配置比例
+    if (gross > 0) {
+      const stockPct = (s.stock / gross) * 100;
+      const cashPct = (s.cash / gross) * 100;
+      outStockPct.textContent = stockPct.toFixed(1) + '%';
+      outCashPct.textContent = cashPct.toFixed(1) + '%';
+      barStock.style.width = stockPct + '%';
+      barCash.style.width = cashPct + '%';
+    } else {
+      outStockPct.textContent = '0%';
+      outCashPct.textContent = '0%';
+      barStock.style.width = '0%';
+      barCash.style.width = '0%';
+    }
+
+    if (s.net > 0) {
+      outExposureAmt.textContent = fmt(s.exposure);
+      const exposureRatio = s.exposure / s.net;
+      outRatio.textContent = exposureRatio.toFixed(2) + 'x';
+    } else {
+      outExposureAmt.textContent = fmt(s.exposure);
+      outRatio.textContent = '—';
+    }
+  }
+
+  function buildActionRow(delta, name, price) {
+    let tag, tagText, amt;
+    if (Math.abs(delta) < 0.5) {
+      tag = 'hold'; tagText = '不動'; amt = fmt(0);
+    } else if (delta > 0) {
+      tag = 'buy'; tagText = '買入'; amt = fmt(delta);
+    } else {
+      tag = 'sell'; tagText = '賣出'; amt = fmt(Math.abs(delta));
+    }
+    let sharesHtml = '';
+    if (price && price > 0 && Math.abs(delta) >= 0.5) {
+      const shares = Math.round(Math.abs(delta) / price);
+      const actualAmt = shares * price;
+      sharesHtml = '<div style="font-size: 12px; color: var(--text-3); padding-left: 56px; margin-top: 2px;">' +
+        '約 ' + shares.toLocaleString('en-US') + ' 股 (實際 ' + fmt(actualAmt) + ')</div>';
+    }
+    return '<div class="trade-action"><div class="action-row">' +
+      '<span class="tag ' + tag + '">' + tagText + '</span>' +
+      '<span class="item-name">' + name + '</span>' +
+      '<span class="item-amt">' + amt + '</span>' +
+      '</div>' + sharesHtml + '</div>';
+  }
+
+  function buildAfterSnapshot(items) {
+    let html = '<div class="after-snapshot"><p class="after-title">調整後狀態</p><div class="after-grid">';
+    items.forEach(it => {
+      html += '<div class="after-item"><p class="lbl">' + it.label + '</p>' +
+        '<p class="v' + (it.highlight ? ' highlight' : '') + '">' + it.value +
+        (it.pct ? ' <span class="pct">(' + it.pct + ')</span>' : '') + '</p></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderTradeSnapshot() {
+    const s = getState();
+    cur0050.textContent = fmt(s.a0050);
+    curLev.textContent = fmt(s.lev);
+    curCash.textContent = fmt(s.cash);
+    curNet.textContent = fmt(s.net);
+    const gross = s.stock + s.cash;
+    curRatio.textContent = s.net > 0 ? (s.exposure / s.net).toFixed(2) + 'x' : '—';
+    curCashPct.textContent = gross > 0 ? ((s.cash / gross) * 100).toFixed(1) + '%' : '0%';
+  }
+
+  function renderModeA() {
+    const s = getState();
+    const target = parseFloat(targetRatioInput.value);
+    if (!isFinite(target) || target < 0) {
+      modeAResult.innerHTML = '<div class="empty-state">輸入目標曝險倍率以查看試算結果</div>';
+      return;
+    }
+    if (s.net <= 0) {
+      modeAResult.innerHTML = '<div class="empty-state">請先在「資產總覽」分頁輸入資產數據</div>';
+      return;
+    }
+
+    // 曝險 = (台股總 - 正二) + 正二×2 + 美股 = 台股總 + 正二 + 美股
+    // 模式 A: 0050 ↔ 正二 互換, 台股總部位不變
+    // 新曝險 = 台股總 + 新正二 + 美股 = target * net
+    // → 新正二 = target * net - 台股總 - 美股
+    const targetExposure = target * s.net;
+    const newLev = targetExposure - s.twTotal - s.us;
+    const deltaLev = newLev - s.lev;
+    const delta0050 = -deltaLev;
+    const new0050 = s.a0050 + delta0050;
+
+    const modeHead = '<div class="mode-card">' +
+      '<p class="mode-desc">在 0050 與 0050正二 間互換，不影響現金與淨資產</p>';
+
+    if (new0050 < -0.5 || newLev < -0.5) {
+      let reason = '';
+      if (newLev < -0.5) {
+        reason = '目標曝險倍率過低，需要把 0050正二 降到負數，無法達成。';
+      } else if (new0050 < -0.5) {
+        reason = '需要賣出 ' + fmt(Math.abs(delta0050)) + ' 的 0050，但目前只有 ' + fmt(s.a0050) + '，持股不足。';
+      }
+      modeAResult.innerHTML = modeHead +
+        '<div class="mode-impossible">⚠️ 此模式無法達成目標。' + reason +
+        '<br>建議搭配模式 B 從現金加減碼，或調整目標曝險倍率。</div></div>';
+      return;
+    }
+
+    const gross = s.stock + s.cash;
+    const stockPct = gross > 0 ? (s.stock / gross) * 100 : 0;
+    const cashPct = gross > 0 ? (s.cash / gross) * 100 : 0;
+
+    const p0050 = parseFloat(price0050Input.value);
+    const pLev = parseFloat(priceLevInput.value);
+    const priceLev = (isFinite(pLev) && pLev > 0) ? pLev : null;
+    const price0050 = (isFinite(p0050) && p0050 > 0) ? p0050 : null;
+
+    modeAResult.innerHTML = modeHead +
+      buildActionRow(deltaLev, '0050正二', priceLev) +
+      buildActionRow(delta0050, '0050', price0050) +
+      buildAfterSnapshot([
+        { label: '股市部位', value: fmt(s.stock), pct: stockPct.toFixed(1) + '%' },
+        { label: '現金部位', value: fmt(s.cash), pct: cashPct.toFixed(1) + '%' },
+        { label: '自有淨資產', value: fmt(s.net) },
+        { label: '達成曝險倍率', value: target.toFixed(2) + 'x', highlight: true }
+      ]) + '</div>';
+  }
+
+  function renderModeB() {
+    const s = getState();
+    const targetPct = parseFloat(targetCashInput.value);
+    if (!isFinite(targetPct) || targetPct < 0 || targetPct > 100) {
+      modeBResult.innerHTML = '<div class="empty-state">輸入目標現金佔比以查看試算結果</div>';
+      return;
+    }
+    if (s.net <= 0) {
+      modeBResult.innerHTML = '<div class="empty-state">請先在「資產總覽」分頁輸入資產數據</div>';
+      return;
+    }
+
+    const gross = s.stock + s.cash;
+    const targetCash = gross * (targetPct / 100);
+    const deltaCash = targetCash - s.cash;
+    const deltaStock = -deltaCash;
+    const newCash = s.cash + deltaCash;
+    const adjustableStock = Math.max(0, s.twTotal - s.lev) + s.us;
+
+    const modeHead = '<div class="mode-card">' +
+      '<p class="mode-desc">透過買賣股票資產調整現金水位，0050正二 不動</p>';
+
+    if (deltaStock < 0 && Math.abs(deltaStock) > adjustableStock + 0.5) {
+      modeBResult.innerHTML = modeHead +
+        '<div class="mode-impossible">⚠️ 需要賣出 ' + fmt(Math.abs(deltaStock)) +
+        ' 的股票資產，但可調整的股票 (不含0050正二) 只有 ' + fmt(adjustableStock) + '，持股不足。</div></div>';
+      return;
+    }
+    if (newCash < -0.5) {
+      modeBResult.innerHTML = modeHead +
+        '<div class="mode-impossible">⚠️ 需要動用 ' + fmt(Math.abs(deltaCash)) +
+        ' 現金，但目前只有 ' + fmt(s.cash) + '，現金不足。</div></div>';
+      return;
+    }
+
+    const newStock = s.stock + deltaStock;
+    const newStockPct = gross > 0 ? (newStock / gross) * 100 : 0;
+    const newCashPct = gross > 0 ? (newCash / gross) * 100 : 0;
+    const newExposure = newStock + s.lev;
+    const newExposureRatio = s.net > 0 ? newExposure / s.net : 0;
+
+    modeBResult.innerHTML = modeHead +
+      buildActionRow(deltaStock, '股票資產 (0050正二 除外)') +
+      buildAfterSnapshot([
+        { label: '股市部位', value: fmt(newStock), pct: newStockPct.toFixed(1) + '%' },
+        { label: '現金部位', value: fmt(newCash), pct: newCashPct.toFixed(1) + '%', highlight: true },
+        { label: '自有淨資產', value: fmt(s.net) },
+        { label: '曝險倍率', value: s.net > 0 ? newExposureRatio.toFixed(2) + 'x' : '—' }
+      ]) + '</div>';
+  }
+
+  function update() {
+    renderOverview();
+    renderTradeSnapshot();
+    renderModeA();
+    renderModeB();
+    renderLoan();
+  }
+
+  fixedIds.forEach(id => {
+    inputs[id].addEventListener('input', () => { update(); save(); });
+  });
+  loanIds.forEach(id => {
+    loanInputs[id].addEventListener('input', () => { update(); saveLoan(); });
+  });
+  targetRatioInput.addEventListener('input', () => {
+    renderModeA();
+    try { localStorage.setItem(TARGET_RATIO_KEY, targetRatioInput.value); } catch (e) {}
+  });
+  targetCashInput.addEventListener('input', () => {
+    renderModeB();
+    try { localStorage.setItem(TARGET_CASH_KEY, targetCashInput.value); } catch (e) {}
+  });
+  price0050Input.addEventListener('input', () => {
+    renderModeA();
+    try { localStorage.setItem(PRICE_0050_KEY, price0050Input.value); } catch (e) {}
+  });
+  priceLevInput.addEventListener('input', () => {
+    renderModeA();
+    try { localStorage.setItem(PRICE_LEV_KEY, priceLevInput.value); } catch (e) {}
+  });
+  resetBtn.addEventListener('click', () => {
+    if (!confirm('確定要清除所有資產數值嗎? (目標值、存款欄位與信貸資料會保留)')) return;
+    fixedIds.forEach(id => { inputs[id].value = ''; });
+    depositsContainer.querySelectorAll('input.amount').forEach(inp => { inp.value = ''; });
+    update();
+    save();
+    saveDeposits();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
