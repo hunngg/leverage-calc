@@ -929,21 +929,63 @@
 
   // ===== 一鍵抓取最新股價 =====
   async function fetchYahooPrice(symbol) {
-    const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`;
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
     
+    // 1. 嘗試直接讀取 (直連)
     try {
-      const res = await fetch(directUrl);
-      if (!res.ok) throw new Error('Direct fetch failed');
-      const data = await res.json();
-      return data.chart.result[0].meta.regularMarketPrice;
+      const res = await fetch(targetUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+          return data.chart.result[0].meta.regularMarketPrice;
+        }
+      }
     } catch (e) {
-      console.warn(`Direct fetch for ${symbol} failed, trying CORS proxy...`, e);
-      const res = await fetch(proxyUrl);
-      const data = await res.json();
-      const parsed = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
-      return parsed.chart.result[0].meta.regularMarketPrice;
+      console.warn(`Direct fetch for ${symbol} failed, trying proxies...`, e);
     }
+    
+    // 2. 備用代理列表
+    const proxies = [
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+    ];
+
+    for (const getProxyUrl of proxies) {
+      try {
+        const proxyUrl = getProxyUrl(targetUrl);
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const text = await res.text();
+          const data = JSON.parse(text);
+          if (data.chart && data.chart.result && data.chart.result[0]) {
+            return data.chart.result[0].meta.regularMarketPrice;
+          }
+        }
+      } catch (err) {
+        console.warn(`Proxy failed for ${symbol}:`, err);
+      }
+    }
+    
+    throw new Error(`Failed to fetch Yahoo price for ${symbol}`);
+  }
+
+  async function fetchTwseFallback() {
+    const url = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('TWSE OpenAPI failed');
+    const list = await res.json();
+    let p0050 = null;
+    let pLev = null;
+    for (const item of list) {
+      if (item.Code === '0050') {
+        p0050 = parseFloat(item.ClosingPrice);
+      } else if (item.Code === '00631L') {
+        pLev = parseFloat(item.ClosingPrice);
+      }
+      if (p0050 !== null && pLev !== null) break;
+    }
+    return { p0050, pLev };
   }
 
   // ===== 數值千分位處理機制 =====
@@ -1544,10 +1586,21 @@
     priceFetchStatus.style.color = 'var(--info-accent)';
 
     try {
-      const [p0050, pLev] = await Promise.all([
-        fetchYahooPrice('0050.TW'),
-        fetchYahooPrice('00631L.TW')
-      ]);
+      let p0050, pLev;
+      try {
+        const [yahooP0050, yahooPLev] = await Promise.all([
+          fetchYahooPrice('0050.TW'),
+          fetchYahooPrice('00631L.TW')
+        ]);
+        p0050 = yahooP0050;
+        pLev = yahooPLev;
+      } catch (yahooErr) {
+        console.warn('Yahoo Finance API failed, trying TWSE OpenAPI fallback...', yahooErr);
+        priceFetchStatus.textContent = '⚡ 正在連線證交所備用 API (需下載約 3MB，請稍候)...';
+        const twseData = await fetchTwseFallback();
+        p0050 = twseData.p0050;
+        pLev = twseData.pLev;
+      }
 
       if (p0050 && pLev) {
         price0050Input.value = p0050.toFixed(2);
@@ -1567,7 +1620,7 @@
       }
     } catch (e) {
       console.error(e);
-      priceFetchStatus.textContent = '❌ 獲取失敗，可能因為網路問題或 API 限制，請手動輸入股價。';
+      priceFetchStatus.textContent = '❌ 獲取失敗，可能因為網路中斷或 API 限制，請手動輸入股價。';
       priceFetchStatus.style.color = 'var(--sell-accent)';
     } finally {
       fetchPricesBtn.disabled = false;
