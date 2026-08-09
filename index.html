@@ -942,6 +942,19 @@
   const PRICE_0050_KEY = 'price-0050';
   const PRICE_LEV_KEY = 'price-lev';
 
+  // ===== PharmLife 平台同步（僅推送幾個關鍵摘要數字，不影響本工具原有的本機運作）=====
+  const PHARMLIFE_API_URL = 'https://script.google.com/macros/s/AKfycbwbrwsQhfmS-ax0w7swR7ZoFZmjEQE6ircgsdzNI7mOQZVoxRE1HGDNtBfXku994JZt/exec';
+  let pharmLifeSyncTimer = null;
+  function schedulePharmLifeSync(snapshot) {
+    clearTimeout(pharmLifeSyncTimer);
+    pharmLifeSyncTimer = setTimeout(() => {
+      fetch(PHARMLIFE_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ module: 'leverage', action: 'sync', ...snapshot }),
+      }).catch(() => { /* 同步失敗不影響本機功能，靜默略過即可 */ });
+    }, 2000);
+  }
+
   const fixedAssetIds = ['tw-0050', 'lev-twstock', 'us-stock'];
   const loanParamIds = ['loan-total', 'loan-rate', 'loan-periods', 'loan-paid', 'loan-payday', 'loan-fee', 'loan-override-payment', 'loan-override-balance'];
 
@@ -1399,9 +1412,10 @@
 
     // 資產結構百分比 (股市 vs 現金，負債獨立列出，加總以股市+現金為 gross)
     const gross = s.stock + s.cash;
+    let stockPct = 0, cashPct = 0;
     if (gross > 0) {
-      const stockPct = (s.stock / gross) * 100;
-      const cashPct = (s.cash / gross) * 100;
+      stockPct = (s.stock / gross) * 100;
+      cashPct = (s.cash / gross) * 100;
       outStockPct.textContent = stockPct.toFixed(1) + '%';
       outCashPct.textContent = cashPct.toFixed(1) + '%';
       barStock.style.width = stockPct + '%';
@@ -1414,14 +1428,23 @@
     }
 
     // 曝險比率顯示
+    let ratio = null;
     if (s.net > 0) {
       outExposureAmt.textContent = fmt(s.exposure);
-      const ratio = s.exposure / s.net;
+      ratio = s.exposure / s.net;
       outRatio.textContent = ratio.toFixed(2) + 'x';
     } else {
       outExposureAmt.textContent = fmt(s.exposure);
       outRatio.textContent = '—';
     }
+
+    // 同步幾個關鍵摘要數字給 PharmLife 平台首頁顯示（debounce，不會每次按鍵都送出）
+    schedulePharmLifeSync({
+      stockPct: gross > 0 ? stockPct : null,
+      cashPct: gross > 0 ? cashPct : null,
+      exposureRatio: ratio,
+      netWorth: s.net,
+    });
   }
 
   function renderLoanTab() {
