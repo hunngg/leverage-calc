@@ -9,10 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiMwQzQ0N0MiLz4KICA8cG9seWxpbmUKICAgIHBvaW50cz0iODAsMzYwIDE4MCwyNjAgMjYwLDMwMCAzNDAsMTYwIDQzMiwxNDAiCiAgICBmaWxsPSJub25lIgogICAgc3Ryb2tlPSJ3aGl0ZSIKICAgIHN0cm9rZS13aWR0aD0iMzIiCiAgICBzdHJva2UtbGluZWNhcD0icm91bmQiCiAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgb3BhY2l0eT0iMC4zIgogIC8+CiAgPHBvbHlsaW5lCiAgICBwb2ludHM9IjgwLDM2MCAxODAsMjYwIDI2MCwzMDAgMzQwLDE2MCA0MzIsMTQwIgogICAgZmlsbD0ibm9uZSIKICAgIHN0cm9rZT0id2hpdGUiCiAgICBzdHJva2Utd2lkdGg9IjIyIgogICAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogICAgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIKICAvPgogIDxjaXJjbGUgY3g9IjQzMiIgY3k9IjE0MCIgcj0iMjIiIGZpbGw9IndoaXRlIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iMzkwIiB4Mj0iNDQwIiB5Mj0iMzkwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNCIvPgo8L3N2Zz4=",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }
